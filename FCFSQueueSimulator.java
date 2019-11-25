@@ -7,6 +7,9 @@ import java.util.*;
 import java.lang.*;
 
 public class FCFSQueueSimulator extends QueueSimulator {
+	// The current amount works in queue
+	private double work;
+
 	public FCFSQueueSimulator(AbstractRealDistribution jobSize, AbstractRealDistribution arrivalRate) {
 		this.jobSize = jobSize;
 		this.arrivalRate = arrivalRate;
@@ -14,38 +17,19 @@ public class FCFSQueueSimulator extends QueueSimulator {
 
 	public FCFSQueueSimulator(){}
 
-	public void simulate(int n) {
-		double work = 0;
-		double totalResponseTime = 0;
-		int drops = 0;
-		for (int i = 0; i < n; i++) {
-			double arrivalTime = arrivalRate.sample();
-			double size = jobSize.sample();
-			work = Math.max(work - arrivalTime, 0) + size;
-			double responseTime = work;
-			if (cutOffTime != null && responseTime > cutOffTime) {
-				drops++;
-			}
-			totalResponseTime += responseTime;
-		}
-		dropRate = drops * 1.0 / n;
-		meanResponseTime = totalResponseTime / n;
+	public void init() {
+		this.work = 0.0;
+		this.jobs = 0;
+		this.drops = 0;
+		this.totalResponseTime = 0.0;
 	}
 
-	public void simulate(List<Double> arrivalTimes, List<Double> jobSizes) {
-		double work = 0;
-		double totalResponseTime = 0;
-		int drops = 0;
-		int n = arrivalTimes.size();
-		for (int i = 0; i < n; i++) {
-			work = Math.max(work - arrivalTimes.get(i), 0) + jobSizes.get(i);
-			double responseTime = work;
-			if (cutOffTime != null && responseTime > cutOffTime) {
-				drops++;
-			}
-			totalResponseTime += responseTime;
+	public void simulateStep(Double arrivalTime, Double size) {
+		jobs++;
+		work = Math.max(work - arrivalTime, 0) + size;
+		if (cutOffTime != null && work > cutOffTime) {
+			drops++;
 		}
-		dropRate = drops * 1.0 / n;
-		meanResponseTime = totalResponseTime / n;
+		totalResponseTime += work;
 	}
 }

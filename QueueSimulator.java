@@ -10,25 +10,42 @@ public abstract class QueueSimulator {
 	protected AbstractRealDistribution jobSize;
 	protected AbstractRealDistribution arrivalRate;
 	// The fraction of jobs with response time greater than cut off
-	protected Double dropRate;
-	protected Double meanResponseTime;
+	protected Integer jobs;
+	protected Integer drops;
+	protected Double totalResponseTime;
 	protected Double cutOffTime;
 
-	public abstract void simulate(int n);
-	public abstract void simulate(List<Double> arrivalTimes, List<Double> jobSizes);
+	public abstract void init();
+	public abstract void simulateStep(Double arrivalTime, Double size);
+	
+	public void simulate(int n) {
+		for (int i = 0; i < n; i++) {
+			simulateStep(arrivalRate.sample(), jobSize.sample());
+		}
+	}
+
+	public void simulate(List<Double> arrivalTimes, List<Double> jobSizes) {
+		int n = arrivalTimes.size();
+		for (int i = 0; i < n; i++) {
+			simulateStep(arrivalTimes.get(i), jobSizes.get(i));
+		}
+	}
 
 	public double getDropRate() throws Exception {
-		if (dropRate == null) {
+		if (drops == null) {
 			throw new Exception("Simulation not run yet");
 		}
-		return dropRate;
+		return drops * 1.0 / jobs;
 	}
 
 	public double getMeanResponseTime() throws Exception {
-		if (meanResponseTime == null) {
+		if (totalResponseTime == null) {
 			throw new Exception("Simulation not run yet");
 		}
-		return meanResponseTime;
+		if (this instanceof FCFSQueueSimulator) {
+			return totalResponseTime / jobs;
+		}
+		return totalResponseTime / (jobs - drops);
 	}
 
 	public void setCutOff(double t) {
